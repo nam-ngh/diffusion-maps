@@ -73,7 +73,7 @@ class Map:
     def plot(self, data, eigenvals, eigenvecs):
         n_vecs = 5
         max_dims = eigenvecs.shape[1]
-        top_idx = [max_dims - k - 1 for k in range(n_vecs)]
+        top_idx = [max_dims - k - 21 for k in range(n_vecs)]
         
         # 1. Eigenvalue spectrum
         fig, ax = plt.subplots(figsize=(6, 3))
@@ -112,15 +112,19 @@ class Map:
 
     def run(self, data, plot=False):
         P_sym, d = self.compute_markov(data)
-        eigenvals, eigenvecs_sym = self.eigen_decompose(P_sym, iter_max=100)
+        # eigenvals, eigenvecs_sym = self.eigen_decompose(P_sym, iter_max=100)
+        eigenvals, eigenvecs_sym = np.linalg.eigh(P_sym)
 
         # convert back to eigenvectors of P
         d_inv_sqrt = 1.0 / np.sqrt(d)
         eigenvecs = eigenvecs_sym * d_inv_sqrt[:, np.newaxis]
 
-        # renormalise
-        eigenvecs = eigenvecs / np.linalg.norm(eigenvecs, axis=0, keepdims=True)
+        
         if plot:
+            # renormalise
+            # l2_norm = np.linalg.norm(eigenvecs, axis=0, keepdims=True)
+            norm = np.sqrt(np.sum(d[:, None] * eigenvecs**2, axis=0))
+            eigenvecs = eigenvecs / norm
             self.plot(data, eigenvals, eigenvecs)
         else:
             print(f'Eigenvalues: {eigenvals.shape}, Eigenvectors: {eigenvecs.shape}')
@@ -129,8 +133,8 @@ class Map:
         # check orthogonality
         # print(eigenvecs.T[202] @ eigenvecs.T[100])
 
-# if __name__ == "__main__":
-#     data = np.load('data/population.npy')
-#     print(data[:3])
-#     map = Map()
-#     map.run(data, plot=True)
+if __name__ == "__main__":
+    data = np.load('data/population.npy')
+    print(data[:3])
+    map = Map()
+    map.run(data, plot=True)
